@@ -49,7 +49,7 @@ services:
     depends_on:
       - backend
     environment:
-      VITE_API_URL: http://localhost:8000
+      VITE_API_URL: http://13.244.62.169/:8000
 
 # ── Volumes persistants ──────────────────────────────────────────
 volumes:

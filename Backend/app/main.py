@@ -31,6 +31,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",    # React en développement local
         "http://localhost:80",
+        "http://13.244.62.169:8000",  # API en production
+        "http://13.244.62.169:3000",
         "*"  # À restreindre en production
     ],
     allow_credentials=True,
