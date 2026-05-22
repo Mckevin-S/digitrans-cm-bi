@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
 
   # ── Base de données PostgreSQL ──────────────────────────────
@@ -29,7 +27,7 @@ services:
 
   # ── Backend FastAPI ───────────────────────────────────────────
   backend:
-    build: ./backend
+    build: ./Backend
     container_name: digitrans-bi-backend
     ports:
       - '8000:8000'
@@ -40,11 +38,11 @@ services:
       db:
         condition: service_healthy  # Attendre que PostgreSQL soit prêt
     volumes:
-      - ./backend:/app  # Hot reload en développement
+      - ./Backend:/app  # Hot reload en développement
 
   # ── Frontend React ───────────────────────────────────────────
   frontend:
-    build: ./frontend
+    build: ./Frontend
     container_name: digitrans-bi-frontend
     ports:
       - '3000:80'  # Port 3000 en dehors, 80 dans le conteneur
