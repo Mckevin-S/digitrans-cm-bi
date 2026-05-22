@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+
+  # ── Base de données PostgreSQL ──────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: digitrans-bi-db
+    environment:
+      POSTGRES_DB: digitrans_bi
+      POSTGRES_USER: bi_user
+      POSTGRES_PASSWORD: bi_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persistance des données
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U bi_user -d digitrans_bi']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Cache Redis (mode offline-first) ─────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: digitrans-bi-redis
+    ports:
+      - '6379:6379'
+
+  # ── Backend FastAPI ───────────────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: digitrans-bi-backend
+    ports:
+      - '8000:8000'
+    environment:
+      DATABASE_URL: postgresql://bi_user:bi_pass@db:5432/digitrans_bi
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      db:
+        condition: service_healthy  # Attendre que PostgreSQL soit prêt
+    volumes:
+      - ./backend:/app  # Hot reload en développement
+
+  # ── Frontend React ───────────────────────────────────────────
+  frontend:
+    build: ./frontend
+    container_name: digitrans-bi-frontend
+    ports:
+      - '3000:80'  # Port 3000 en dehors, 80 dans le conteneur
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: http://localhost:8000
+
+# ── Volumes persistants ──────────────────────────────────────────
+volumes:
+  postgres_data:    # Les données PostgreSQL survivent aux redémarrages

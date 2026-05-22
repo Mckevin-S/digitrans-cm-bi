@@ -11,6 +11,9 @@ from .etl.seed import seed_all_data
 # Création automatique des tables si elles n'existent pas
 Base.metadata.create_all(bind=engine)
 
+# Chargement initial des données simulées pour le développement
+seed_all_data()
+
 # Initialisation de l'application FastAPI
 app = FastAPI(
     title="DIGITRANS-CM — API Module BI",

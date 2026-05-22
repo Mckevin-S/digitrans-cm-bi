@@ -7,15 +7,18 @@ from dotenv import load_dotenv
 # Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
 
-# URL de connexion à PostgreSQL
-# Format : postgresql://utilisateur:motdepasse@hote:port/nom_base
-DATABASE_URL = os.getenv(
-    'DATABASE_URL',
-    'postgresql://bi_user:bi_pass@localhost:5433/digitrans_bi'  # valeur par défaut
-)
+# URL de connexion à la base de données
+# Format PostgreSQL : postgresql://utilisateur:motdepasse@hote:port/nom_base
+# Si aucune variable n'est définie, utiliser SQLite local pour le développement.
+DATABASE_URL = os.getenv('DATABASE_URL')
+if not DATABASE_URL:
+    DATABASE_URL = 'sqlite:///./digitrans_bi.db'
+    connect_args = {'check_same_thread': False}
+else:
+    connect_args = {}
 
 # Création du moteur SQLAlchemy
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 # Factory de sessions de BDD
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
