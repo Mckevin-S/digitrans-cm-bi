@@ -37,13 +37,13 @@ jobs:
           python-version: '3.11'
 
       - name: Installer les dépendances
-        run: pip install -r backend/requirements.txt
+        run: pip install -r Backend/requirements.txt
 
       - name: Lancer les tests unitaires
         env:
           DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_bi
         run: |
-          cd backend
+          cd Backend
           pytest tests/ -v --tb=short
           echo '✅ Tous les tests sont passés'
 
