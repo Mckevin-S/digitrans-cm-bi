@@ -5,6 +5,18 @@ from app import models
 
 router = APIRouter()
 
-@router.get("/restaurants")
+@router.get("/restaurants", summary='Liste des restaurants SavoirManger')
 def list_restaurants(db: Session = Depends(get_db)):
-    return db.query(models.Restaurant).all()
+    results = (
+        db.query(models.KPIVente.ville, models.KPIVente.restaurant)
+          .distinct()
+          .order_by(models.KPIVente.ville, models.KPIVente.restaurant)
+          .all()
+    )
+    return [
+        {
+            'ville': r.ville,
+            'restaurant': r.restaurant,
+        }
+        for r in results
+    ]

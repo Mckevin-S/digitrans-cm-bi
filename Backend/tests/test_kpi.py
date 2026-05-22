@@ -47,5 +47,23 @@ class TestKPIEndpoints:
         data = response.json()
         assert len(data) == 4  # ERP, CRM, Supply Chain, BI
 
+    def test_erp_effectifs_endpoint(self):
+        response = client.get('/api/erp/effectifs')
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) > 0
+        assert 'mois' in data[0]
+        assert 'departement' in data[0]
+
+    def test_crm_restaurants_endpoint(self):
+        response = client.get('/api/crm/restaurants')
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) > 0
+        assert 'ville' in data[0]
+        assert 'restaurant' in data[0]
+
 # Lancer les tests : pytest tests/ -v
 # Résultat attendu : 8 tests passed

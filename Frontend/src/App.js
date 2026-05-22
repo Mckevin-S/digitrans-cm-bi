@@ -3,7 +3,7 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis,
          CartesianGrid, Tooltip, Legend, ResponsiveContainer,
          Cell } from 'recharts';
 import KPICard from './components/KPICard';
-import { fetchKPIResume, fetchCAParVille, fetchEvolution, fetchBudget } from './services/api';
+import { fetchKPIResume, fetchCAParVille, fetchEvolution, fetchBudget, fetchEffectifs, fetchRestaurants } from './services/api';
 
 const COULEURS_VILLES = ['#2563EB', '#166534', '#EA580C', '#6D28D9', '#0F766E'];
 
@@ -12,16 +12,22 @@ function App() {
   const [caVille, setCAVille] = useState([]);
   const [evolution, setEvo] = useState([]);
   const [budget, setBudget] = useState([]);
+  const [effectifs, setEffectifs] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOffline, setOffline] = useState(!navigator.onLine);
+
+  const latestMonth = effectifs.length ? effectifs[effectifs.length - 1].mois : null;
+  const latestEffectifs = latestMonth ? effectifs.filter(item => item.mois === latestMonth) : [];
 
   useEffect(() => {
     let isMounted = true;
 
     const load = async () => {
       setLoading(true);
-      const [r, c, e, b] = await Promise.all([
-        fetchKPIResume(), fetchCAParVille(), fetchEvolution(), fetchBudget()
+      const [r, c, e, b, ef, rest] = await Promise.all([
+        fetchKPIResume(), fetchCAParVille(), fetchEvolution(), fetchBudget(),
+        fetchEffectifs(), fetchRestaurants()
       ]);
 
       if (!isMounted) return;
@@ -29,6 +35,8 @@ function App() {
       setCAVille(c);
       setEvo(e);
       setBudget(b);
+      setEffectifs(ef);
+      setRestaurants(rest);
       setLoading(false);
     };
 
@@ -160,6 +168,51 @@ function App() {
                   fill='#2563EB' />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', marginTop:'24px' }}>
+          <div style={{ background:'white', borderRadius:'12px', padding:'24px',
+                        boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
+            <h3 style={{ margin:'0 0 20px', color:'#1B2A4A', fontSize:'16px' }}>
+              Effectifs AGROCAM — Dernier mois disponible
+            </h3>
+            <p style={{ margin:'0 0 16px', color:'#64748B', fontSize:'13px' }}>
+              {latestMonth ? `Mois : ${latestMonth}` : 'Chargement des effectifs...'}
+            </p>
+            <div style={{ overflowX:'auto' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign:'left', padding:'8px 10px', color:'#475569', fontSize:'13px' }}>Département</th>
+                    <th style={{ textAlign:'right', padding:'8px 10px', color:'#475569', fontSize:'13px' }}>Effectif</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {latestEffectifs.map((item, idx) => (
+                    <tr key={idx} style={{ borderTop:'1px solid #E2E8F0' }}>
+                      <td style={{ padding:'10px', fontSize:'14px', color:'#1F2937' }}>{item.departement}</td>
+                      <td style={{ padding:'10px', textAlign:'right', fontSize:'14px', color:'#1F2937' }}>{item.effectif}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div style={{ background:'white', borderRadius:'12px', padding:'24px',
+                        boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
+            <h3 style={{ margin:'0 0 20px', color:'#1B2A4A', fontSize:'16px' }}>
+              Restaurants SavoirManger
+            </h3>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
+              {restaurants.map((item, idx) => (
+                <div key={idx} style={{ background:'#F8FAFC', padding:'12px 14px', borderRadius:'10px' }}>
+                  <p style={{ margin:'0 0 4px', fontSize:'13px', color:'#64748B' }}>{item.ville}</p>
+                  <p style={{ margin:0, fontSize:'15px', color:'#0F172A', fontWeight:'600' }}>{item.restaurant}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
