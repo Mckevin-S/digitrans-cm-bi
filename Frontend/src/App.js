@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis,
          CartesianGrid, Tooltip, Legend, ResponsiveContainer,
          Cell } from 'recharts';
+import { BarChart3, Users, ShieldCheck, DollarSign, MapPin, Layers, TrendingUp, Building2 } from 'lucide-react';
 import KPICard from './components/KPICard';
 import { fetchKPIResume, fetchCAParVille, fetchEvolution, fetchBudget, fetchEffectifs, fetchRestaurants } from './services/api';
+import './App.css';
 
-const COULEURS_VILLES = ['#2563EB', '#166534', '#EA580C', '#6D28D9', '#0F766E'];
+const COULEURS_VILLES = ['#3B82F6', '#10B981', '#F97316', '#8B5CF6', '#0EA5E9'];
 
 function App() {
   const [resume, setResume] = useState(null);
@@ -19,6 +21,12 @@ function App() {
 
   const latestMonth = effectifs.length ? effectifs[effectifs.length - 1].mois : null;
   const latestEffectifs = latestMonth ? effectifs.filter(item => item.mois === latestMonth) : [];
+  const resumeData = resume ?? {
+    ca_total_fcfa: 0,
+    effectif_total: 0,
+    taux_consommation_pct: 0,
+    statut: 'SOUS_BUDGET',
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -59,163 +67,158 @@ function App() {
   }, []);
 
   if (loading) return (
-    <div style={{ display:'flex', justifyContent:'center', alignItems:'center',
-      height:'100vh', background:'#F1F5F9' }}>
-      <div style={{ textAlign:'center' }}>
-        <div style={{ fontSize:'48px', marginBottom:'16px' }}>📊</div>
-        <p style={{ color:'#475569', fontSize:'18px' }}>Chargement DIGITRANS-CM...</p>
+    <div className="app-loader">
+      <div className="loader-card">
+        <div className="loader-icon"><BarChart3 size={42} /></div>
+        <p>Chargement du dashboard DIGITRANS-CM...</p>
       </div>
     </div>
   );
 
   return (
-    <div style={{ fontFamily:'Segoe UI,system-ui,sans-serif',
-                  background:'#F1F5F9', minHeight:'100vh', padding:'0' }}>
-
-      <div style={{ background:'#1B2A4A', color:'white', padding:'16px 32px',
-                    display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+    <div className="app-shell">
+      <header className="app-header">
         <div>
-          <h1 style={{ margin:0, fontSize:'20px', fontWeight:'bold' }}>
-            📊 DIGITRANS-CM — Tableaux de bord AGROCAM S.A.
-          </h1>
-          <p style={{ margin:'4px 0 0', fontSize:'13px', color:'#93C5FD' }}>
-            Module BI • Mise à jour : {new Date().toLocaleDateString('fr-CM')}
-          </p>
+          <p className="app-eyebrow">DIGITRANS-CM • Tableau de bord BI</p>
+          <h1>Analyse stratégique AGROCAM</h1>
+          <p className="app-subtitle">Module BI — données opérationnelles et KPI consolidés</p>
         </div>
-        {isOffline && (
-          <div style={{ background:'#FEF08A', color:'#713F12',
-                        padding:'8px 16px', borderRadius:'8px', fontSize:'14px' }}>
-            ⚡ Mode hors ligne — Données en cache local
+        <div className="app-status-group">
+          <div className={`status-pill ${isOffline ? 'offline' : 'online'}`}>
+            <span className="status-dot" />
+            {isOffline ? 'Hors ligne' : 'Connecté'}
           </div>
-        )}
-      </div>
-
-      <div style={{ padding:'24px 32px' }}>
-        {resume && (
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)',
-                        gap:'20px', marginBottom:'28px' }}>
-            <KPICard titre='CA Total Restaurants'
-              valeur={`${(resume.ca_total_fcfa / 1000000).toFixed(1)} M FCFA`}
-              couleur='#2563EB' icone='💰' />
-            <KPICard titre='Effectifs AGROCAM'
-              valeur={`${resume.effectif_total} personnes`}
-              couleur='#166534' icone='👥' />
-            <KPICard titre='Budget Consommé'
-              valeur={`${resume.taux_consommation_pct} %`}
-              couleur={resume.taux_consommation_pct > 100 ? '#991B1B' : '#EA580C'}
-              icone='📈' />
-            <KPICard titre='Statut Projet'
-              valeur={resume.statut === 'SOUS_BUDGET' ? '✅ Sous budget' : '⚠️ Dépassement'}
-              couleur={resume.statut === 'SOUS_BUDGET' ? '#166534' : '#991B1B'}
-              icone='🎯' />
+          <div className="meta-card">
+            <span>Dernière mise à jour</span>
+            <strong>{new Date().toLocaleDateString('fr-FR')}</strong>
           </div>
-        )}
+        </div>
+      </header>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px' }}>
-          <div style={{ background:'white', borderRadius:'12px', padding:'24px',
-                        boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
-            <h3 style={{ margin:'0 0 20px', color:'#1B2A4A', fontSize:'16px' }}>
-              CA SavoirManger par Ville (FCFA)
-            </h3>
-            <ResponsiveContainer width='100%' height={260}>
-              <BarChart data={caVille} margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray='3 3' stroke='#F1F5F9' />
-                <XAxis dataKey='ville' tick={{ fontSize: 12 }} />
-                <YAxis tickFormatter={v => `${(v / 1000000).toFixed(0)}M`} tick={{ fontSize: 11 }} />
+      <main className="app-main">
+        <section className="kpi-grid">
+          <KPICard titre='CA total restaurants' valeur={`${(resumeData.ca_total_fcfa / 1000000).toFixed(1)} M FCFA`} couleur='#3B82F6' Icon={DollarSign} />
+          <KPICard titre='Effectifs AGROCAM' valeur={`${resumeData.effectif_total} personnes`} couleur='#10B981' Icon={Users} />
+          <KPICard titre='Consommation budget' valeur={`${resumeData.taux_consommation_pct} %`} couleur={resumeData.taux_consommation_pct > 100 ? '#DC2626' : '#F97316'} Icon={ShieldCheck} />
+          <KPICard titre='Statut projet' valeur={resumeData.statut === 'SOUS_BUDGET' ? 'Sous budget' : 'Dépassement'} couleur={resumeData.statut === 'SOUS_BUDGET' ? '#10B981' : '#DC2626'} Icon={TrendingUp} />
+        </section>
+
+        <section className="charts-grid">
+          <article className="panel-card">
+            <div className="panel-heading">
+              <div>
+                <p className="panel-title">CA par ville</p>
+                <p className="panel-description">Comparaison des chiffres d'affaires par implantation</p>
+              </div>
+              <MapPin size={20} />
+            </div>
+            <ResponsiveContainer width='100%' height={320}>
+              <BarChart data={caVille} margin={{ left: 10, right: 10, top: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray='4 4' stroke='#E5E7EB' />
+                <XAxis dataKey='ville' tick={{ fontSize: 12, fill: '#64748B' }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={v => `${(v / 1000000).toFixed(0)}M`} tick={{ fontSize: 12, fill: '#64748B' }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={v => [`${(v / 1000000).toFixed(2)} M FCFA`, 'CA']} />
-                <Bar dataKey='ca' name='CA mensuel' radius={[6,6,0,0]}>
+                <Bar dataKey='ca' radius={[8, 8, 0, 0]}>
                   {caVille.map((_, i) => (
                     <Cell key={i} fill={COULEURS_VILLES[i % COULEURS_VILLES.length]} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </article>
 
-          <div style={{ background:'white', borderRadius:'12px', padding:'24px',
-                        boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
-            <h3 style={{ margin:'0 0 20px', color:'#1B2A4A', fontSize:'16px' }}>
-              Évolution CA — Janvier à Mai 2026
-            </h3>
-            <ResponsiveContainer width='100%' height={260}>
+          <article className="panel-card">
+            <div className="panel-heading">
+              <div>
+                <p className="panel-title">Évolution mensuelle</p>
+                <p className="panel-description">Croissance du CA de janvier à mai 2026</p>
+              </div>
+              <TrendingUp size={20} />
+            </div>
+            <ResponsiveContainer width='100%' height={320}>
               <LineChart data={evolution}>
-                <CartesianGrid strokeDasharray='3 3' stroke='#F1F5F9' />
-                <XAxis dataKey='mois' tick={{ fontSize: 12 }} />
-                <YAxis tickFormatter={v => `${(v / 1000000).toFixed(0)}M`} tick={{ fontSize: 11 }} />
+                <CartesianGrid strokeDasharray='4 4' stroke='#E5E7EB' />
+                <XAxis dataKey='mois' tick={{ fontSize: 12, fill: '#64748B' }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={v => `${(v / 1000000).toFixed(0)}M`} tick={{ fontSize: 12, fill: '#64748B' }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={v => [`${(v / 1000000).toFixed(2)} M FCFA`, 'CA']} />
-                <Line type='monotone' dataKey='ca' stroke='#2563EB'
-                  strokeWidth={3} dot={{ r: 6, fill: '#2563EB' }}
-                  activeDot={{ r: 8 }} />
+                <Line type='monotone' dataKey='ca' stroke='#3B82F6' strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 7 }} />
               </LineChart>
             </ResponsiveContainer>
-          </div>
+          </article>
+        </section>
 
-          <div style={{ background:'white', borderRadius:'12px', padding:'24px',
-                        boxShadow:'0 2px 8px rgba(0,0,0,0.06)', gridColumn:'span 2' }}>
-            <h3 style={{ margin:'0 0 20px', color:'#1B2A4A', fontSize:'16px' }}>
-              Suivi Budgétaire DIGITRANS-CM — Budget Prévu vs Réel (FCFA)
-            </h3>
-            <ResponsiveContainer width='100%' height={220}>
-              <BarChart data={budget} layout='vertical' margin={{ left: 80 }}>
-                <CartesianGrid strokeDasharray='3 3' stroke='#F1F5F9' />
-                <XAxis type='number' tickFormatter={v => `${(v / 1000000).toFixed(0)}M`} />
-                <YAxis type='category' dataKey='module' tick={{ fontSize: 13 }} />
+        <section className="budget-section">
+          <article className="panel-card full-width">
+            <div className="panel-heading">
+              <div>
+                <p className="panel-title">Budget par module</p>
+                <p className="panel-description">Comparaison du budget prévu et des dépenses réelles</p>
+              </div>
+              <Layers size={20} />
+            </div>
+            <ResponsiveContainer width='100%' height={260}>
+              <BarChart data={budget} layout='vertical' margin={{ left: 100, top: 10, bottom: 10, right: 20 }}>
+                <CartesianGrid strokeDasharray='4 4' stroke='#E5E7EB' />
+                <XAxis type='number' tickFormatter={v => `${(v / 1000000).toFixed(0)}M`} tick={{ fontSize: 12, fill: '#64748B' }} axisLine={false} tickLine={false} />
+                <YAxis type='category' dataKey='module' tick={{ fontSize: 13, fill: '#334155' }} axisLine={false} tickLine={false} />
                 <Tooltip formatter={v => [`${(v / 1000000).toFixed(1)} M FCFA`]} />
                 <Legend />
-                <Bar dataKey='prevu' name='Budget prévu' fill='#DBEAFE' radius={[0,4,4,0]} />
-                <Bar dataKey='reel'  name='Dépenses réelles'
-                  radius={[0,4,4,0]}
-                  fill='#2563EB' />
+                <Bar dataKey='prevu' name='Budget prévu' fill='#DBEAFE' radius={[0, 8, 8, 0]} />
+                <Bar dataKey='reel' name='Dépenses réelles' fill='#3B82F6' radius={[0, 8, 8, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </div>
+          </article>
+        </section>
 
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px', marginTop:'24px' }}>
-          <div style={{ background:'white', borderRadius:'12px', padding:'24px',
-                        boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
-            <h3 style={{ margin:'0 0 20px', color:'#1B2A4A', fontSize:'16px' }}>
-              Effectifs AGROCAM — Dernier mois disponible
-            </h3>
-            <p style={{ margin:'0 0 16px', color:'#64748B', fontSize:'13px' }}>
-              {latestMonth ? `Mois : ${latestMonth}` : 'Chargement des effectifs...'}
-            </p>
-            <div style={{ overflowX:'auto' }}>
-              <table style={{ width:'100%', borderCollapse:'collapse' }}>
+        <section className="details-grid">
+          <article className="panel-card">
+            <div className="panel-heading">
+              <div>
+                <p className="panel-title">Effectifs AGROCAM</p>
+                <p className="panel-description">Répartition par département, dernier mois disponible</p>
+              </div>
+              <Users size={20} />
+            </div>
+            <div className="subtle-text">{latestMonth ? `Mois : ${latestMonth}` : 'Chargement des effectifs...'}</div>
+            <div className="table-scroll">
+              <table className="data-table">
                 <thead>
                   <tr>
-                    <th style={{ textAlign:'left', padding:'8px 10px', color:'#475569', fontSize:'13px' }}>Département</th>
-                    <th style={{ textAlign:'right', padding:'8px 10px', color:'#475569', fontSize:'13px' }}>Effectif</th>
+                    <th>Département</th>
+                    <th>Effectif</th>
                   </tr>
                 </thead>
                 <tbody>
                   {latestEffectifs.map((item, idx) => (
-                    <tr key={idx} style={{ borderTop:'1px solid #E2E8F0' }}>
-                      <td style={{ padding:'10px', fontSize:'14px', color:'#1F2937' }}>{item.departement}</td>
-                      <td style={{ padding:'10px', textAlign:'right', fontSize:'14px', color:'#1F2937' }}>{item.effectif}</td>
+                    <tr key={idx}>
+                      <td>{item.departement}</td>
+                      <td>{item.effectif}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </div>
+          </article>
 
-          <div style={{ background:'white', borderRadius:'12px', padding:'24px',
-                        boxShadow:'0 2px 8px rgba(0,0,0,0.06)' }}>
-            <h3 style={{ margin:'0 0 20px', color:'#1B2A4A', fontSize:'16px' }}>
-              Restaurants SavoirManger
-            </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
+          <article className="panel-card">
+            <div className="panel-heading">
+              <div>
+                <p className="panel-title">Restaurants SavoirManger</p>
+                <p className="panel-description">Liste des restaurants par ville</p>
+              </div>
+              <Building2 size={20} />
+            </div>
+            <div className="restaurant-grid">
               {restaurants.map((item, idx) => (
-                <div key={idx} style={{ background:'#F8FAFC', padding:'12px 14px', borderRadius:'10px' }}>
-                  <p style={{ margin:'0 0 4px', fontSize:'13px', color:'#64748B' }}>{item.ville}</p>
-                  <p style={{ margin:0, fontSize:'15px', color:'#0F172A', fontWeight:'600' }}>{item.restaurant}</p>
+                <div key={idx} className="restaurant-card">
+                  <p className="restaurant-city">{item.ville}</p>
+                  <p className="restaurant-name">{item.restaurant}</p>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
+          </article>
+        </section>
+      </main>
     </div>
   );
 }
