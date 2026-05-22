@@ -1,0 +1,84 @@
+# ═══════════════════════════════════════════════════════════
+# Pipeline CI/CD — DIGITRANS-CM Module BI
+# Déclenché à chaque push sur la branche main
+# ═══════════════════════════════════════════════════════════
+name: CI/CD — Deploy BI vers AWS af-south-1
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  # ── JOB 1 : Tests automatiques ───────────────────────────
+  test:
+    name: Tests unitaires Python
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: test_bi
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Installer les dépendances
+        run: pip install -r backend/requirements.txt
+
+      - name: Lancer les tests unitaires
+        env:
+          DATABASE_URL: postgresql://test_user:test_pass@localhost:5432/test_bi
+        run: |
+          cd backend
+          pytest tests/ -v --tb=short
+          echo '✅ Tous les tests sont passés'
+
+  # ── JOB 2 : Déploiement AWS (seulement si tests OK) ─────
+  deploy:
+    name: Déployer sur AWS EC2 af-south-1
+    needs: test           # Ce job attend que 'test' réussisse
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'  # Seulement sur main
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Connexion SSH et déploiement
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.AWS_SSH_KEY }}
+          script: |
+            echo '📦 Mise à jour du code source...'
+            cd /home/ubuntu/digitrans-cm-bi
+            git pull origin main
+
+            echo '🐳 Reconstruction et redémarrage Docker...'
+            docker-compose down
+            docker-compose up -d --build
+
+            echo '✅ Vérification des services...'
+            docker-compose ps
+
+            echo '🔍 Test health check API...'
+            sleep 15  # Attendre que les services démarrent
+            curl -f http://localhost:8000/health || exit 1
+
+            echo '🎉 Déploiement DIGITRANS-CM BI réussi !'
+            echo 'Timestamp: $(date)'
